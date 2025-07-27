@@ -60,7 +60,7 @@ export default function EmailVerifier() {
 
       const data = await response.json();
       console.log("Backend responded:", data);
-      setResponse(data.failedList. data.successList);
+      setResponse(data.failedList, data.successList);
     } catch (error) {
       console.error("Error sending valid emails to backend:", error);
     }
