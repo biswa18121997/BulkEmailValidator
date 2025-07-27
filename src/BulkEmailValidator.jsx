@@ -6,6 +6,7 @@ export default function EmailVerifier() {
   const [emailInput, setEmailInput] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState(null);
 
   const verifyEmails = async () => {
     setLoading(true);
@@ -59,6 +60,7 @@ export default function EmailVerifier() {
 
       const data = await response.json();
       console.log("Backend responded:", data);
+      setResponse(data.failedList. data.successList);
     } catch (error) {
       console.error("Error sending valid emails to backend:", error);
     }
@@ -87,32 +89,86 @@ export default function EmailVerifier() {
         </button>
       )}
 
+      <h2 className="text-xl font-semibold mb-4">E-Mail Verification Results</h2>
+
       {results.length > 0 && (
-        <div className="border border-gray-200 shadow p-4 rounded">
-          <div className="overflow-x-auto max-h-[400px]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-2">Email</th>
-                  <th>SMTP Valid</th>
-                  <th>Deliverable</th>
-                  <th>Disposable</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((r, i) => (
-                  <tr key={i} className="border-b">
-                    <td className="px-4 py-2">{r.email}</td>
-                    <td>{r.smtpValid ? "✅" : "❌"}</td>
-                    <td>{r.isDeliverable ? "Yes" : "No"}</td>
-                    <td>{r.isDisposable ? "Yes" : "No"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+  <div className="grid grid-cols-1 gap-2 justify-center items-center mt-6">
+    <div className="flex justify-around items-center bg-gray-100 p-4 rounded-lg shadow-sm">
+      <p className="text-gray-600">
+        {results.length} email(s) processed.
+      </p>
+      <p className="text-gray-600">
+        {results.filter(r => r.smtpValid).length} SMTP valid email(s).
+      </p>
+      <p className="text-gray-600">
+        {results.filter(r => r.isDeliverable).length} deliverable email(s).
+      </p>
+      <p className="text-gray-600">
+        {results.filter(r => r.isDisposable).length} disposable email(s).
+      </p>
+     
     </div>
+    {results.map((r, i) => (
+      <div
+        key={i}
+className={`${
+  r.isDeliverable ? "text-black bg-green-400" : "bg-red-400 text-black"
+} p-4 border rounded-lg shadow-sm space-y-2 flex justify-around items-center`}      >
+        <p className="font-medium text-gray-800">
+          📧 {r.email}
+        </p>
+        <p>
+          SMTP Valid:{" "}
+          <span className={r.smtpValid ? "text-green-600" : "text-red-600"}>
+            {r.smtpValid ? "✅ Yes" : "❌ No"}
+          </span>
+        </p>
+        <p>
+          Deliverable:{" "}
+          <span className={r.isDeliverable ? "text-black bg-green-400" : "bg-red-400 text-black"}>
+            {r.isDeliverable ? "Yes" : "No"}
+          </span>
+        </p>
+        <p>
+          Disposable:{" "}
+          <span className={r.isDisposable ? "text-orange-600" : "text-gray-600"}>
+            {r.isDisposable ? "Yes" : "No"}
+          </span>
+        </p>
+        {r.error && (
+          <p className="text-red-500">❗ Error verifying this email</p>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+
+<hr />
+
+<div>
+  <h1>Email Sending Results : </h1>
+  {response ? (
+    <div>
+      <h2>Successful Emails:</h2>
+      <ul className="list-disc pl-5 bg-green-400"> 
+        {response.successful.map((email, index) => (
+          <li key={index} className="text-green-600">{email}</li>
+        ))}
+      </ul>
+      <h2>Failed Emails:</h2>
+      <ul className="list-disc pl-5 bg-green-400">
+        {response.failedList.map((item, index) => (
+          <li key={index} className="text-red-600">
+            {item.email}: {item.error}
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : (
+    <p>No email sending results yet.</p>
+  )}
+
+</div>
+</div>
   );
 }
