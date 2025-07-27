@@ -1,94 +1,90 @@
 import React, { useState } from "react";
-import Papa from "papaparse";
-import { Inbox } from "lucide-react";
 
-const API_KEY = "24d85f6549672836f6b7fe1d2e5a4ea7"; // Replace with your MailboxLayer API key
+const API_KEY = import.meta.env.VITE_API_KEY_KICKBOX;
 
 export default function EmailVerifier() {
-  const [emails, setEmails] = useState([]);
+  const [emailInput, setEmailInput] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (file.type === "application/json") {
-        try {
-          const jsonData = JSON.parse(event.target.result);
-          const emailList = jsonData.map((item) => item.email);
-          setEmails(emailList);
-        } catch (err) {
-          alert("Invalid JSON file format.");
-        }
-      } else {
-        Papa.parse(file, {
-          header: true,
-          complete: (results) => {
-            const emailList = results.data.map((row) => row.email).filter(Boolean);
-            setEmails(emailList);
-          },
-        });
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const verifyEmails = async () => {
     setLoading(true);
+
+    const emails = emailInput
+      .split(',')
+      .map(e => e.trim())
+      .filter(e => e.length > 0);
+
     const output = [];
 
     for (const email of emails) {
       try {
         const res = await fetch(
-          `https://apilayer.net/api/check?access_key=${API_KEY}&email=${email}&smtp=1&format=1`
+          `https://api.kickbox.com/v2/verify?email=${email}&apikey=${API_KEY}`
         );
         const data = await res.json();
+        console.log("Kickbox response:", data);
         output.push({
           email,
-          smtpValid: data.smtp_check || false,
-          isDeliverable: data.format_valid && data.mx_found && data.smtp_check,
-          isDisposable: data.disposable || false,
+          smtpValid: data.result === "deliverable",
+          isDeliverable: data.result === "deliverable",
+          isDisposable: data.disposable === true,
         });
       } catch {
+        console.log(output);
         output.push({ email, error: true });
       }
     }
-    console.log(output);
 
     setResults(output);
+    prepareFilteredDataAndSend(output);
     setLoading(false);
+  };
+
+  const prepareFilteredDataAndSend = async (output) => {
+    const validResults = output.filter((r) => r.isDeliverable);
+    if (validResults.length === 0) return;
+
+    try {
+      const response = await fetch(
+        import.meta.env.VITE_BACKEND_API_BASE_URL,
+        {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ results: validResults }),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Backend responded:", data);
+    } catch (error) {
+      console.error("Error sending valid emails to backend:", error);
+    }
   };
 
   return (
     <div className="p-6 space-y-6">
-      <div className="p-6 flex flex-col items-center justify-center border-dashed border-2 border-gray-300">
-        <input
-          type="file"
-          accept=".csv,.json"
-          onChange={handleFileUpload}
-          className="hidden"
-          id="file-input"
+      <div className="p-6 border border-dashed border-gray-300 rounded">
+        <label className="block mb-2 font-medium">Paste Emails (comma-separated)</label>
+        <textarea
+          rows="5"
+          value={emailInput}
+          onChange={(e) => setEmailInput(e.target.value)}
+          className="w-full border border-gray-300 p-2 rounded"
+          placeholder="example1@gmail.com, example2@yahoo.com"
         />
-        <label htmlFor="file-input" className="cursor-pointer text-center">
-          <Inbox className="mx-auto mb-2" size={48} />
-          <p className="text-gray-600">Drag and drop or click to upload CSV or JSON</p>
-        </label>
       </div>
 
-      {emails.length > 0 && (
-        <div className="space-y-4">
-          <p className="text-sm text-gray-700">Found {emails.length} emails to verify.</p>
-          <button
-            onClick={verifyEmails}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? "Verifying..." : "Verify Emails"}
-          </button>
-        </div>
+      {emailInput.trim().length > 0 && (
+        <button
+          onClick={verifyEmails}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? "Verifying..." : "Verify Emails"}
+        </button>
       )}
 
       {results.length > 0 && (
