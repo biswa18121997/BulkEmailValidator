@@ -60,7 +60,7 @@ export default function EmailVerifier() {
 
       const data = await response.json();
       console.log("Backend responded:", data);
-      setResponse(data.failedList, data.successList);
+      setResponse(data);
     } catch (error) {
       console.error("Error sending valid emails to backend:", error);
     }
@@ -157,7 +157,7 @@ className={`${
       </ul>
       <h2>Failed Emails:</h2>
       <ul className="list-disc pl-5 bg-green-400">
-        {response.failedList.map((item, index) => (
+        {response.failed.map((item, index) => (
           <li key={index} className="text-red-600">
             {item.email}: {item.error}
           </li>
