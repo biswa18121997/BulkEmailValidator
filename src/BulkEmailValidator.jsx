@@ -152,13 +152,13 @@ className={`${
       <h2>Successful Emails:</h2>
       <ul className="list-disc pl-5 bg-green-400"> 
         {response.successful.map((email, index) => (
-          <li key={index} className="text-green-600">{email}</li>
+          <li key={index} className="text-black">{email}</li>
         ))}
       </ul>
       <h2>Failed Emails:</h2>
-      <ul className="list-disc pl-5 bg-green-400">
+      <ul className="list-disc pl-5 bg-red-400">
         {response.failed.map((item, index) => (
-          <li key={index} className="text-red-600">
+          <li key={index} className="text-black">
             {item.email}: {item.error}
           </li>
         ))}
