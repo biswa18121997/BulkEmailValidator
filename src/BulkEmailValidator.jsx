@@ -146,19 +146,19 @@ className={`${
 <hr />
 
 <div>
-  <h1>Email Sending Results : </h1>
+  <h1 className="text-xl font-semibold mb-4">Email Sending Results : </h1>
   {response ? (
     <div>
-      <h2>Successful Emails:</h2>
+      <h2 className="text-xl font-medium mb-2">Successful Emails:</h2>
       <ul className="list-disc pl-5 bg-green-400"> 
         {response.successful.map((email, index) => (
-          <li key={index} className="text-black">{email}</li>
+          <li key={index} className="text-black m-2 p-2 border rounded-2xl">{email}</li>
         ))}
       </ul>
-      <h2>Failed Emails:</h2>
+      <h2 className="text-xl font-medium mb-2">Failed Emails:</h2>
       <ul className="list-disc pl-5 bg-red-400">
         {response.failed.map((item, index) => (
-          <li key={index} className="text-black">
+          <li key={index} className="text-black m-2 p-2 border rounded-2xl">
             {item.email}: {item.error}
           </li>
         ))}
